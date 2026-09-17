@@ -1,145 +1,887 @@
-<!DOCTYPE html><html lang="pt-BR">
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Consolidado - Recuperação Financeira</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body { background-color: #f3f4f6; font-family: 'Inter', sans-serif; }
-        .card { background: white; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); padding: 1.5rem; }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Dashboard Executivo Consolidado · Intervalor</title>
+<meta name="description" content="Dashboard executivo consolidado — Estácio, WYDEN e IDOMED: Promessas de Acordo (02/09/2026 a 09/09/2026).">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+<style>
+    :root{
+        --navy: #0c2a4d;
+        --navy-light: #1f568f;
+        --accent: #f5a623;
+        --accent-dark: #a67c00;
+        --ink: #10233b;
+        --muted: #5c7690;
+        --bg-app: #eef1f5;
+        --bg-card: #f8fafc;
+        --bg-panel: #f5f8fb;
+        --bg-highlight: #fef3d7;
+        --border: #e3eaf2;
+        --up: #217a3b;
+        --down: #c0392b;
+        --brand-estacio: #07BBE9;
+        --brand-wyden: #FF0008;
+        --brand-idomed: #0A3F3C;
+
+        /* ---- Paleta Estácio (logotipo oficial: diamante azul-ciano) ---- */
+        --estacio-100: #EAF9FD;
+        --estacio-200: #C2ECFF;
+        --estacio-300: #BFE0D7;
+        --estacio-400: #79C5BF;
+        --estacio-500: #24AABC;
+        --estacio-600: #07BBE9;
+        --estacio-700: #0E8FB0;
+        --estacio-800: #0B5E75;
+        --estacio-ink: #08313F;
+
+        /* ---- Paleta Wyden (logotipo oficial: vermelho) ---- */
+        --wyden-100: #FFD1C0;
+        --wyden-200: #FFE7D9;
+        --wyden-300: #FA4C22;
+        --wyden-500: #FF0008;
+        --wyden-600: #D30007;
+        --wyden-700: #991700;
+        --wyden-800: #5C0A00;
+
+        /* ---- Paleta IDOMED (logotipo oficial: verde-escuro + laranja) ---- */
+        --idomed-100: #C5F3F0;
+        --idomed-200: #B4FCF1;
+        --idomed-300: #65D3C8;
+        --idomed-400: #FFA552;
+        --idomed-500: #0F9B8E;
+        --idomed-600: #0A3F3C;
+        --idomed-700: #06302D;
+        --idomed-800: #04211F;
+
+        --radius-lg: 24px;
+        --radius-md: 18px;
+        --radius-sm: 12px;
+        --shadow-card: 0 4px 14px rgba(12,42,77,.06);
+        --ease: cubic-bezier(.4,0,.2,1);
+    }
+
+    *{ margin:0; padding:0; box-sizing:border-box; }
+
+    body{
+        font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+        background: var(--bg-app);
+        color: var(--ink);
+        min-height:100vh;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .dashboard{
+        max-width: 1280px;
+        width:100%;
+        margin: 0 auto;
+        background:#fff;
+        box-shadow: 0 25px 60px -15px rgba(10,30,55,.28);
+        overflow:hidden;
+        position:relative;
+    }
+
+    /* ---------- Navegação ---------- */
+    .nav-bar{
+        background: linear-gradient(120deg, var(--navy) 0%, #163f6e 100%);
+        padding: 14px clamp(16px, 4vw, 30px);
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        flex-wrap:wrap;
+        gap:12px;
+    }
+
+    .nav-bar .title{
+        color:#fff;
+        font-weight:600;
+        font-size: clamp(.95rem, 2vw, 1.1rem);
+        letter-spacing:.2px;
+        display:flex;
+        align-items:center;
+        gap:10px;
+        white-space:nowrap;
+    }
+
+    .nav-bar .title i{ color: var(--accent); font-size: 1.1em; }
+
+    .brand-picker{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+    .brand-picker .p-label{ color:rgba(255,255,255,.7); font-size:.75rem; text-transform:uppercase; letter-spacing:.5px; margin-right:4px; }
+    .brand-chip{
+        background: rgba(255,255,255,.08);
+        border: 1px solid rgba(255,255,255,.16);
+        color:#e6edf5;
+        padding: 6px 14px;
+        border-radius: 40px;
+        font-size:.84rem;
+        font-weight:500;
+        cursor:pointer;
+        transition: background .18s var(--ease), border-color .18s var(--ease);
+        display:inline-flex;
+        align-items:center;
+        gap:7px;
+    }
+    .brand-chip:hover{ background:#1f568f; color:#fff; }
+    .brand-chip.active{ background: var(--accent); border-color: var(--accent); color: var(--ink); font-weight:700; }
+    .brand-chip.estacio.active{ background: var(--estacio-600); border-color: var(--estacio-600); color:#fff; }
+    .brand-chip.wyden.active{ background: var(--wyden-500); border-color: var(--wyden-500); color:#fff; }
+    .brand-chip.idomed.active{ background: var(--idomed-600); border-color: var(--idomed-600); color:#fff; }
+    .brand-chip .b-dot{ width:8px; height:8px; border-radius:50%; background: currentColor; opacity:.85; }
+
+    .nav-buttons{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+
+    .nav-btn{
+        background: rgba(255,255,255,.08);
+        border: 1px solid rgba(255,255,255,.16);
+        color:#e6edf5;
+        padding: 7px 16px;
+        border-radius: 40px;
+        font-size:.88rem;
+        font-weight:500;
+        cursor:pointer;
+        transition: background .18s var(--ease), border-color .18s var(--ease), transform .18s var(--ease);
+        display:inline-flex;
+        align-items:center;
+        gap:7px;
+    }
+
+    .nav-btn:hover{ background:#1f568f; border-color: var(--accent); color:#fff; }
+    .nav-btn:active{ transform: scale(.96); }
+    .nav-btn:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
+    .nav-btn.icon-only{ padding: 7px 12px; }
+
+    .slide-indicator{ color: rgba(255,255,255,.65); font-size:.8rem; margin-left:2px; min-width: 40px; text-align:center; }
+
+    /* ---------- progresso (pontos) ---------- */
+    .progress-track{ display:flex; justify-content:center; gap:8px; padding: 10px 20px 0; background:#fff; flex-wrap:wrap; }
+    .dot{
+        width:8px; height:8px; border-radius:50%;
+        background: var(--border);
+        border:none; cursor:pointer; padding:0;
+        transition: background .2s var(--ease), width .25s var(--ease);
+    }
+    .dot:hover{ background:#c9d6e2; }
+    .dot.active{ background: var(--accent); width:22px; border-radius:5px; }
+    .dot:focus-visible{ outline: 2px solid var(--navy-light); outline-offset:3px; }
+
+    /* ---------- slides ---------- */
+    .slide-viewport{ position:relative; overflow:hidden; }
+    .slide{ display:none; padding: 28px clamp(18px, 4vw, 36px) 26px; }
+    .slide.active{ display:block; animation: fade .35s var(--ease); }
+
+    @keyframes fade{ from{ opacity:0; transform: translateY(8px); } to{ opacity:1; transform: translateY(0); } }
+    @media (prefers-reduced-motion: reduce){
+        .slide.active{ animation:none; }
+        .dot, .nav-btn, .kpi-card{ transition:none; }
+    }
+
+    .slide h3{ color: var(--ink); font-size: 1.2rem; display:flex; align-items:center; gap:10px; margin-bottom: 6px; }
+    .slide h3 i{ color: var(--accent); }
+    .subtitle{ color: var(--muted); font-size:.9rem; margin-bottom: 18px; }
+
+    .brand-head{ display:inline-flex; align-items:center; gap:8px; padding:5px 14px; border-radius:30px; font-size:.85rem; font-weight:700; color:#fff; }
+    .brand-head.estacio{ background: var(--estacio-600); color: var(--estacio-ink); }
+    .brand-head.wyden{ background: var(--wyden-500); }
+    .brand-head.idomed{ background: var(--idomed-600); }
+    .brand-head.all{ background: var(--navy); }
+
+    /* ---------- KPI cards ---------- */
+    .kpi-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap:16px; margin: 18px 0 24px; }
+
+    .kpi-card{
+        background: var(--bg-card);
+        border-radius: var(--radius-md);
+        padding: 18px;
+        box-shadow: var(--shadow-card);
+        border-left: 4px solid var(--navy);
+        transition: transform .18s var(--ease), box-shadow .18s var(--ease);
+    }
+    .kpi-card:hover{ transform: translateY(-2px); box-shadow: 0 8px 20px rgba(12,42,77,.1); }
+    .kpi-card .label{ font-size:.76rem; text-transform:uppercase; letter-spacing:.5px; color: var(--muted); font-weight:700; }
+    .kpi-card .value{ font-size: 1.5rem; font-weight:700; color: var(--ink); margin: 6px 0 3px; line-height:1.15; }
+    .kpi-card .sub{ font-size:.8rem; color: var(--muted); }
+
+    /* ---------- gráficos ---------- */
+    .flex-charts, .two-col{ display:flex; flex-wrap:wrap; gap:20px; margin: 18px 0; }
+    .col{ flex:1 1 300px; display:flex; flex-direction:column; gap:14px; }
+
+    .chart-box{
+        flex:1 1 300px;
+        background: #fbfdff;
+        border-radius: var(--radius-md);
+        padding: 16px 16px 10px;
+        box-shadow: var(--shadow-card);
+        border: 1px solid var(--border);
+        min-width:0;
+    }
+    .chart-box h4{ font-weight:600; color: var(--ink); margin-bottom:12px; font-size:.92rem; }
+    .chart-canvas-wrap{ position:relative; height: 190px; }
+    .chart-canvas-wrap.short{ height: 150px; }
+    .chart-canvas-wrap.tall{ height: 600px; }
+    .chart-canvas-wrap.medium{ height: 260px; }
+
+    /* ---------- callouts ---------- */
+    .callout{
+        background: var(--bg-panel); border-radius: 16px; padding: 12px 18px; font-size:.92rem;
+        border-left: 4px solid var(--accent); display:flex; gap:10px; align-items:flex-start; line-height:1.45;
+    }
+    .callout i{ color: var(--accent); margin-top:2px; }
+    .callout.warn{ background: var(--bg-highlight); }
+
+    /* ---------- tabela ---------- */
+    .table-scroll{ max-height: 480px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-md); }
+    .table-mini{ width:100%; border-collapse:collapse; font-size:.82rem; }
+    .table-mini thead th{
+        position: sticky; top:0; background:#fff; z-index:1;
+        text-align:left; font-size:.66rem; text-transform:uppercase; letter-spacing:.4px;
+        color: var(--muted); padding: 9px 10px; border-bottom: 2px solid var(--border);
+    }
+    .table-mini th:not(:first-child):not(:nth-child(2)), .table-mini td:not(:first-child):not(:nth-child(2)){ text-align:right; }
+    .table-mini td{ padding:8px 10px; border-bottom:1px solid var(--border); white-space:nowrap; }
+    .table-mini tbody tr:hover{ background: var(--bg-panel); }
+    .table-mini tr.subtotal-row td{ font-weight:700; background:#f3f6fa; border-bottom:2px solid var(--border); }
+    .table-mini tfoot td{ padding:10px; font-weight:700; background: var(--bg-panel); border-top:2px solid var(--border); border-bottom:none; position:sticky; bottom:0; }
+    .tier-dot{ display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px; }
+
+    /* ---------- listas / plano ---------- */
+    .panel{ background: var(--bg-panel); border-radius: var(--radius-md); padding:18px; border-left:4px solid var(--accent); }
+    .panel h4{ color: var(--ink); font-size:1rem; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+    .panel + .panel{ margin-top:14px; }
+    .insight-item{ font-size:.88rem; line-height:1.5; padding: 8px 0; border-bottom:1px dashed var(--border); }
+    .insight-item:last-child{ border-bottom:none; padding-bottom:0; }
+    .insight-item strong.brand-tag{ display:inline-block; padding:1px 8px; border-radius:20px; font-size:.7rem; color:#fff; margin-right:6px; }
+    .brand-tag.estacio{ background: var(--estacio-800); }
+    .brand-tag.wyden{ background: var(--wyden-600); }
+    .brand-tag.idomed{ background: var(--idomed-700); color: var(--idomed-100); }
+
+    .plan-item{ display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #dde6ef; padding:9px 0; font-size:.92rem; gap:10px; }
+    .plan-item:last-of-type{ border-bottom:none; }
+    .badge{ background:#e8edf2; border-radius:30px; padding:3px 12px; font-size:.72rem; font-weight:700; color: var(--ink); white-space:nowrap; }
+    .badge.urgent{ background:#ffe1d2; color: var(--accent-dark); }
+
+    /* ---------- lista de motivos de recusa ---------- */
+    .motivo-list{ list-style:none; display:flex; flex-direction:column; gap:8px; }
+    .motivo-list li{ display:flex; align-items:center; gap:10px; font-size:.88rem; padding:8px 12px; background: var(--bg-card); border:1px solid var(--border); border-radius:12px; }
+    .motivo-list .m-count{ margin-left:auto; font-weight:700; color: var(--down); font-family:'Segoe UI',sans-serif; }
+    .motivo-bar{ flex:1; max-width:180px; height:8px; border-radius:4px; background:#e8edf2; overflow:hidden; margin-left:8px; }
+    .motivo-bar i{ display:block; height:100%; background: var(--down); border-radius:4px; }
+
+    /* ---------- capa ---------- */
+    .cover{ display:flex; flex-direction:column; align-items:center; justify-content:center; min-height: 380px; text-align:center; padding: 10px 12px; }
+    .cover i.icon{ font-size: 3.4rem; color: var(--accent); margin-bottom:14px; }
+    .cover h1{ font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight:700; color: var(--ink); }
+    .cover h2{ font-weight:400; color: var(--navy-light); margin-top:8px; font-size: clamp(1rem, 2.4vw, 1.2rem); }
+    .cover .brands-row{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:18px; }
+    .brand-pill{ display:inline-flex; align-items:center; gap:7px; padding:7px 16px; border-radius:30px; font-weight:700; font-size:.85rem; color:#fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.25); }
+    .brand-pill.estacio{ background: var(--estacio-600); color: var(--estacio-ink); box-shadow: none; }
+    .brand-pill.wyden{ background: var(--wyden-500); }
+    .brand-pill.idomed{ background: var(--idomed-600); }
+    .cover .period{ background: var(--bg-highlight); padding: 14px 32px; border-radius: 60px; margin: 20px 0 12px; border:1px solid var(--accent); font-size: 1.05rem; font-weight:600; }
+    .cover .period .sep{ color: var(--accent); }
+    .cover p.lede{ color: var(--muted); max-width: 460px; font-size:.95rem; }
+    .btn-cta{
+        margin-top: 22px; padding: 12px 36px; font-size: .98rem;
+        background: var(--accent); color: var(--ink); border:none;
+        border-radius:40px; font-weight:700; cursor:pointer;
+        display:inline-flex; align-items:center; gap:8px;
+        transition: transform .18s var(--ease), box-shadow .18s var(--ease);
+        box-shadow: 0 6px 16px rgba(245,166,35,.35);
+    }
+    .btn-cta:hover{ transform: translateY(-2px); box-shadow: 0 10px 22px rgba(245,166,35,.42); }
+    .btn-cta:focus-visible{ outline: 2px solid var(--navy); outline-offset:3px; }
+
+    .footer-note{
+        text-align:right; font-size:.78rem; color: var(--muted);
+        margin-top: 18px; border-top:1px solid var(--border); padding-top:12px;
+        display:flex; align-items:center; justify-content:flex-end; gap:6px;
+    }
+
+    .legend-inline{ display:flex; flex-wrap:wrap; gap:14px; font-size:.78rem; color: var(--muted); margin-top:10px; }
+    .legend-inline span{ display:flex; align-items:center; gap:6px; }
+    .legend-inline i{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+
+    /* ---------- mensagens ---------- */
+    .msg-empty{ text-align:center; color:var(--muted); font-size:.9rem; padding:20px 0; }
+
+    /* ---------- responsivo ---------- */
+    @media (max-width: 700px){
+        .dashboard{ border-radius: 20px; }
+        .slide{ padding: 18px 16px 20px; }
+        .kpi-card .value{ font-size: 1.2rem; }
+        .nav-bar{ padding: 12px 16px; }
+        .nav-bar .title span{ display:none; }
+        .cover{ min-height: 300px; }
+        .footer-note{ display:none; }
+        .chart-canvas-wrap.tall{ height: 700px; }
+    }
+
+    @media print{
+        body{ background:#fff; padding:0; }
+        .nav-bar, .progress-track, .btn-cta{ display:none; }
+        .dashboard{ box-shadow:none; max-width:100%; }
+        .slide{ display:block !important; page-break-after: always; }
+        .table-scroll{ max-height:none; overflow:visible; }
+    }
+</style>
 </head>
-<body class="p-6">
-    <div class="max-w-7xl mx-auto">
-        <h1 class="text-3xl font-bold text-gray-800 mb-8">Dashboard Consolidado: Promessas de Acordo (02/09 a 09/09)</h1>
-        
-        <!-- Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="card border-l-4 border-blue-500">
-                <h2 class="text-sm text-gray-500 font-semibold uppercase">Total de Acionados</h2>
-                <p class="text-3xl font-bold text-gray-800">289</p>
-            </div>
-            <div class="card border-l-4 border-green-500">
-                <h2 class="text-sm text-gray-500 font-semibold uppercase">Promessas de Acordo</h2>
-                <p class="text-3xl font-bold text-gray-800">241</p>
-            </div>
-            <div class="card border-l-4 border-purple-500">
-                <h2 class="text-sm text-gray-500 font-semibold uppercase">Valor de Entrada Negociado</h2>
-                <p class="text-3xl font-bold text-gray-800">R$ 776.620,68</p>
-            </div>
-            <div class="card border-l-4 border-yellow-500">
-                <h2 class="text-sm text-gray-500 font-semibold uppercase">Taxa de Conversão (Média)</h2>
-                <p class="text-3xl font-bold text-gray-800">83,39%</p>
-            </div>
+<body>
+<div class="dashboard" role="region" aria-label="Dashboard Executivo Consolidado Intervalor">
+
+    <!-- ========== NAVEGAÇÃO FIXA ========== -->
+    <div class="nav-bar">
+        <div class="title"><i class="fas fa-layer-group" aria-hidden="true"></i> <span id="navTitle">Intervalor · Consolidado Multimarcas</span></div>
+        <div class="brand-picker" role="group" aria-label="Selecionar marca">
+            <span class="p-label">Marca</span>
+            <button class="brand-chip active" data-brand="todas"><span class="b-dot"></span>Todas</button>
+            <button class="brand-chip estacio" data-brand="estacio"><span class="b-dot"></span>Estácio</button>
+            <button class="brand-chip wyden" data-brand="wyden"><span class="b-dot"></span>WYDEN</button>
+            <button class="brand-chip idomed" data-brand="idomed"><span class="b-dot"></span>IDOMED</button>
         </div>
-
-
-        <!-- Charts -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div class="card">
-                <h3 class="text-lg font-semibold text-gray-700 mb-4">Valor de Entrada por Instituição</h3>
-                <canvas id="chartValor"></canvas>
-            </div>
-            <div class="card">
-                <h3 class="text-lg font-semibold text-gray-700 mb-4">Acionados vs Promessas</h3>
-                <canvas id="chartFunil"></canvas>
-            </div>
-        </div>
-
-
-        <!-- Table -->
-        <div class="card mb-8">
-            <h3 class="text-lg font-semibold text-gray-700 mb-4">Top Unidades por Conversão e Valor</h3>
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-left text-sm whitespace-nowrap">
-                    <thead class="uppercase tracking-wider border-b-2 border-gray-200 bg-gray-50">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 border-x border-gray-200">Unidade (Instituição)</th>
-                            <th scope="col" class="px-6 py-3 border-x border-gray-200">Acionados</th>
-                            <th scope="col" class="px-6 py-3 border-x border-gray-200">Promessas</th>
-                            <th scope="col" class="px-6 py-3 border-x border-gray-200">Valor de Entrada</th>
-                            <th scope="col" class="px-6 py-3 border-x border-gray-200">Conversão</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="border-b border-gray-200">
-                            <td class="px-6 py-4 border-x border-gray-200">Idomed Cittá - RJ</td>
-                            <td class="px-6 py-4 border-x border-gray-200">9</td>
-                            <td class="px-6 py-4 border-x border-gray-200">8</td>
-                            <td class="px-6 py-4 border-x border-gray-200">R$ 329.114,91</td>
-                            <td class="px-6 py-4 border-x border-gray-200 text-green-600 font-bold">88,9%</td>
-                        </tr>
-                        <tr class="border-b border-gray-200 bg-gray-50">
-                            <td class="px-6 py-4 border-x border-gray-200">Salvador - BA (Estácio)</td>
-                            <td class="px-6 py-4 border-x border-gray-200">14</td>
-                            <td class="px-6 py-4 border-x border-gray-200">14</td>
-                            <td class="px-6 py-4 border-x border-gray-200">R$ 116.655,48</td>
-                            <td class="px-6 py-4 border-x border-gray-200 text-green-600 font-bold">100%</td>
-                        </tr>
-                        <tr class="border-b border-gray-200">
-                            <td class="px-6 py-4 border-x border-gray-200">UniFavip - Caruaru (Wyden)</td>
-                            <td class="px-6 py-4 border-x border-gray-200">38</td>
-                            <td class="px-6 py-4 border-x border-gray-200">35</td>
-                            <td class="px-6 py-4 border-x border-gray-200">R$ 72.366,07</td>
-                            <td class="px-6 py-4 border-x border-gray-200 text-green-600 font-bold">92,1%</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-
-        <!-- Insights -->
-        <div class="card bg-blue-50 border-blue-200 border">
-            <h3 class="text-lg font-semibold text-blue-800 mb-2">💡 Insights Estratégicos</h3>
-            <ul class="list-disc list-inside text-blue-900 space-y-1 text-sm">
-                <li><strong>Ticket Alto:</strong> Foco nos alunos Rafaela Fratucelli (Idomed - R$ 103k) e Lucas Souza (Estácio - R$ 86k).</li>
-                <li><strong>Ação:</strong> Disparar WhatsApp 24h antes para garantir a meta de 60% de efetividade.</li>
-                <li><strong>Pagamentos:</strong> Boleto predomina na Estácio e Idomed; PIX é maioria na Wyden.</li>
-            </ul>
+        <div class="nav-buttons" role="group" aria-label="Navegação entre slides">
+            <button class="nav-btn" onclick="goSlide(1)" aria-label="Ir para o início"><i class="fas fa-home" aria-hidden="true"></i></button>
+            <button class="nav-btn icon-only" onclick="prevSlide()" aria-label="Slide anterior"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>
+            <button class="nav-btn icon-only" onclick="nextSlide()" aria-label="Próximo slide"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+            <span class="slide-indicator" id="slideCounter" aria-live="polite">1 / 6</span>
         </div>
     </div>
 
+    <div class="progress-track" id="progressTrack" role="tablist" aria-label="Ir para o slide"></div>
 
-    <script>
-        // Gráfico de Valor de Entrada
-        const ctxValor = document.getElementById('chartValor').getContext('2d');
-        new Chart(ctxValor, {
-            type: 'doughnut',
-            data: {
-                labels: ['Estácio', 'Idomed', 'Wyden'],
-                datasets: [{
-                    data: [344419.91, 329114.91, 103085.86],
-                    backgroundColor: ['#3b82f6', '#10b981', '#8b5cf6'],
-                    borderWidth: 1
-                }]
-            },
-            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    <div class="slide-viewport" id="viewport" tabindex="0" aria-label="Conteúdo do slide, use as setas do teclado para navegar">
+
+    <!-- ========== SLIDE 1 – CAPA ========== -->
+    <div class="slide active" data-slide="1">
+        <div class="cover">
+            <i class="fas fa-hand-holding-usd icon" aria-hidden="true"></i>
+            <h1>Dashboard Executivo Consolidado</h1>
+            <h2 id="coverSub">Recuperação de Crédito · Todas as marcas</h2>
+            <div class="brands-row">
+                <span class="brand-pill estacio">Estácio</span>
+                <span class="brand-pill wyden">WYDEN</span>
+                <span class="brand-pill idomed">IDOMED</span>
+            </div>
+            <div class="period"><span>02/09 <span class="sep">⟷</span> 09/09 · 2026</span></div>
+            <p class="lede" id="coverLede">Visão consolidada das 3 marcas atendidas pela Intervalor<br><strong>Promessas de acordo</strong>, comparativo entre marcas e plano de ação.</p>
+            <button class="btn-cta" onclick="goSlide(2)">Iniciar análise <i class="fas fa-arrow-right" aria-hidden="true"></i></button>
+        </div>
+    </div>
+
+    <!-- ========== SLIDE 2 – PAINEL GERAL ========== -->
+    <div class="slide" data-slide="2">
+        <h3><i class="fas fa-tachometer-alt" aria-hidden="true"></i> <span class="brand-head all" id="s2Head">Consolidado · 3 marcas</span></h3>
+        <p class="subtitle" id="s2Sub">Painel geral</p>
+        <div class="kpi-grid" id="s2Kpis"></div>
+        <div class="flex-charts">
+            <div class="chart-box"><h4>Valor de entrada</h4><div class="chart-canvas-wrap"><canvas id="chartValor"></canvas></div></div>
+            <div class="chart-box"><h4>Conversão</h4><div class="chart-canvas-wrap"><canvas id="chartConv"></canvas></div></div>
+        </div>
+        <div class="callout warn" id="s2Callout"><i class="fas fa-bullseye" aria-hidden="true"></i> <span id="s2CalloutTxt"></span></div>
+    </div>
+
+    <!-- ========== SLIDE 3 – COMPARATIVO ========== -->
+    <div class="slide" data-slide="3">
+        <h3><i class="fas fa-scale-balanced" aria-hidden="true"></i> <span class="brand-head all" id="s3Head">Comparativo</span></h3>
+        <p class="subtitle" id="s3Sub">Indicadores agregados</p>
+        <div class="table-scroll" style="max-height:none;">
+            <table class="table-mini">
+                <thead>
+                    <tr><th>Marca</th><th>Acionados</th><th>Promessas</th><th>Recusas</th><th>Valor entrada</th><th>Ticket médio</th><th>Conversão</th></tr>
+                </thead>
+                <tbody id="brandTableBody"></tbody>
+                <tfoot id="brandTableFoot"></tfoot>
+            </table>
+        </div>
+        <div class="chart-box" style="margin-top:20px;"><h4>Acionados × Promessas</h4><div class="chart-canvas-wrap medium"><canvas id="chartAcionProm"></canvas></div></div>
+        <div class="callout" style="margin-top:18px;"><i class="fas fa-info-circle" aria-hidden="true"></i> <span id="s3Callout"></span></div>
+    </div>
+
+    <!-- ========== SLIDE 4 – RANKING DE UNIDADES ========== -->
+    <div class="slide" data-slide="4">
+        <h3><i class="fas fa-ranking-star" aria-hidden="true"></i> <span class="brand-head all" id="s4Head">Ranking de conversão por unidade</span></h3>
+        <p class="subtitle" id="s4Sub">Unidades ordenadas por conversão</p>
+        <div class="chart-box">
+            <div class="chart-canvas-wrap tall"><canvas id="chartRanking"></canvas></div>
+        </div>
+        <div class="legend-inline" id="rankingLegend"></div>
+    </div>
+
+    <!-- ========== SLIDE 5 – DETALHAMENTO FINANCEIRO ========== -->
+    <div class="slide" data-slide="5">
+        <h3><i class="fas fa-coins" aria-hidden="true"></i> <span class="brand-head all" id="s5Head">Detalhamento financeiro por unidade</span></h3>
+        <p class="subtitle" id="s5Sub">Todas as unidades, com subtotais</p>
+        <div class="two-col">
+            <div class="col" style="flex: 1.4 1 340px;">
+                <div class="table-scroll">
+                <table class="table-mini">
+                    <thead>
+                        <tr><th>Marca</th><th>Unidade</th><th>Acion.</th><th>Prom.</th><th>Recusas</th><th>Valor entrada</th><th>Ticket médio</th><th>Conv.</th></tr>
+                    </thead>
+                    <tbody id="unitTableBody"></tbody>
+                    <tfoot id="unitTableFoot"></tfoot>
+                </table>
+                </div>
+            </div>
+            <div class="col">
+                <div class="chart-box" style="height:100%;">
+                    <h4>Ticket médio × Conversão (escala log)</h4>
+                    <div class="chart-canvas-wrap medium"><canvas id="chartScatter"></canvas></div>
+                </div>
+                <div class="callout"><i class="fas fa-chart-line" aria-hidden="true"></i> <span id="s5Callout"></span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== SLIDE 6 – ANÁLISE DE RECUSAS & PLANO DE AÇÃO ========== -->
+    <div class="slide" data-slide="6">
+        <h3><i class="fas fa-briefcase-medical" aria-hidden="true"></i> <span class="brand-head all" id="s6Head">Análise de recusas</span></h3>
+        <p class="subtitle" id="s6Sub">Motivos de recusa, pontos de atenção e plano de ação</p>
+        <div class="two-col">
+            <div class="col">
+                <div class="panel">
+                    <h4>🛑 Motivos de recusa</h4>
+                    <ul class="motivo-list" id="s6Motivos"></ul>
+                </div>
+            </div>
+            <div class="col">
+                <div class="panel" style="border-left-color: var(--accent-dark);">
+                    <h4>⚠️ Pontos de atenção</h4>
+                    <div id="s6Pontos"></div>
+                </div>
+                <div class="panel" style="border-left-color: var(--navy); margin-top:14px;">
+                    <h4>📋 Plano de ação</h4>
+                    <div id="s6Plano"></div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-note"><i class="fas fa-rotate-left" aria-hidden="true"></i> Use o seletor de marca no topo para ver cada operação separadamente.</div>
+    </div>
+
+    </div><!-- /viewport -->
+</div>
+
+<script>
+(function(){
+    'use strict';
+
+    var PERIODO = '02/09 ⟷ 09/09 · 2026';
+
+    var BRAND_META = {
+        todas:  { name: 'Todas as marcas',  color: '#0c2a4d', cls: 'all'  },
+        estacio:{ name: 'Estácio',          color: '#07BBE9', cls: 'estacio' },
+        wyden:  { name: 'WYDEN',            color: '#FF0008', cls: 'wyden'  },
+        idomed: { name: 'IDOMED',           color: '#0A3F3C', cls: 'idomed' }
+    };
+
+    /* Dados reais 02/09 a 09/09/2026 (regra n8n - Análise Semanal de Promessas de Acordo). */
+    var DATA = {"todas":{"meta":{"name":"Todas as marcas","color":"#0c2a4d","cls":"all"},
+    "totais":{"acionados":289,"promessas":241,"recusas":48,"valor":776620.6799999999,"ticket":3222.49,"conv":83.4},
+    "unidades":[],"motivos":[["AGENDAMENTO - INFORMAÇÃO",43],
+                ["RECUSA - SEM CONDIÇÕES",2],
+                ["AGENDAMENTO - PREVISÃO DE PAGAMENTO FIM DO MÊS",1],
+                ["INTENÇÃO DE PAGAMENTO - FICOU DE ANALISAR PROPOSTA",1],
+                ["RECUSA - DISCORDA DOS VALORES",1]],"pontos":["Principal motivo de recusa: AGENDAMENTO - INFORMAÇÃO (43 de 48 recusas).","Taxa de recusa no período: 16,6% (48 de 289 atendimentos).","Unidade R9 TAQUARA - RJ: 8 recusas (80,0% dos acionados) — principal motivo: AGENDAMENTO - INFORMAÇÃO.","Unidade NOVA IGUAÇU - RJ: 7 recusas (38,9% dos acionados) — principal motivo: AGENDAMENTO - INFORMAÇÃO.","Unidade BELEM - PA: 4 recusas (19,0% dos acionados) — principal motivo: AGENDAMENTO - INFORMAÇÃO.","WYDEN (93,2%) e IDOMED (88,9%) seguem com as maiores conversões e menores taxas de recusa."],"plano":[{"txt":"Confirmar retornos agendados (análise de proposta) e registrar follow-up.","urg":false},
+    {"txt":"Reforçar o registro do motivo da recusa e padronizar o detalhamento (TIPO DE RECUSA) na base da semana.","urg":false},
+    {"txt":"Priorizar acompanhamento das unidades com mais recusas: R9 TAQUARA - RJ (8), NOVA IGUAÇU - RJ (7), BELEM - PA (4).","urg":true}],"resumo":"As 3 marcas somaram R$ 776.620,68 em valor de entrada negociado e 83,4% de conversão na semana.","comp":"\u003cstrong>IDOMED\u003c/strong> concentra o maior valor por promessa (ticket médio de R$ 41.139,36); \u003cstrong>WYDEN\u003c/strong> lidera em conversão (93,2%); \u003cstrong>Estácio\u003c/strong> concentra o maior volume (178 promessas em 20 unidades)."},
+    "estacio":{"meta":{"name":"Estácio","color":"#07BBE9","cls":"estacio"},
+    "totais":{"acionados":221,"promessas":178,"recusas":43,"valor":344419.91,"ticket":1934.94,"conv":80.5},
+    "unidades":[["MANAUS - AM",20,19,1,25676.51],
+                ["BELEM - PA",21,17,4,35989.53],
+                ["NITEROI - RJ",17,16,1,21665.05],
+                ["SALVADOR - BA",14,14,0,116655.48],
+                ["TAGUATINGA - DF",16,13,3,14623.25],
+                ["NOVA IGUAÇU - RJ",18,11,7,16806.36],
+                ["CABO FRIO - RJ",14,11,3,2364.02],
+                ["SANTA CRUZ - RJ",11,11,0,14571.9],
+                ["MACAPA - AP",11,10,1,13646.19],
+                ["ESTAÇÃO - GO",12,10,2,13357.95],
+                ["MARACANÃ - RJ",9,8,1,12469.71],
+                ["ARACAJU - SE",11,7,4,7219.83],
+                ["TERESINA - PI",6,6,0,3517.15],
+                ["TOM JOBIM - RJ",6,6,0,11893.1],
+                ["FORTALEZA - CE",7,5,2,6504.91],
+                ["SAO LUIS - MA",5,4,1,8174.99],
+                ["CAMPO GRANDE - RJ",5,3,2,6401.76],
+                ["JATIÚCA - AL",5,3,2,1386.17],
+                ["ABDIAS DE CARVALHO - PE",3,2,1,7182.88],
+                ["R9 TAQUARA - RJ",10,2,8,4313.17]],"motivos":[["AGENDAMENTO - INFORMAÇÃO",43]],"pontos":["Principal motivo de recusa: AGENDAMENTO - INFORMAÇÃO (43 ocorrências).","Taxa de recusa no período: 19,5% (43 de 221 atendimentos).","Unidade R9 TAQUARA - RJ: 8 recusas (80,0% dos acionados) — principal motivo: AGENDAMENTO - INFORMAÇÃO.","Unidade NOVA IGUAÇU - RJ: 7 recusas (38,9% dos acionados) — principal motivo: AGENDAMENTO - INFORMAÇÃO.","O volume de promessas de acordo atingiu o patamar esperado, impulsionado pelo desempenho da unidade líder. Recomenda-se intensificar o monitoramento das recusas para otimizar a conversão nas próximas semanas."],"plano":[{"txt":"Confirmar retornos agendados (análise de proposta) e registrar follow-up.","urg":false},
+    {"txt":"Reforçar o registro do motivo da recusa e padronizar o detalhamento (TIPO DE RECUSA) na base da semana.","urg":false},
+    {"txt":"Priorizar acompanhamento das unidades com mais recusas: R9 TAQUARA - RJ (8), NOVA IGUAÇU - RJ (7).","urg":true}],"resumo":"A Estácio somou R$ 344.419,91 em valor de entrada negociado e 80,5% de conversão na semana (20 unidades).","comp":"A \u003cstrong>Estácio\u003c/strong> opera com 80,5% de conversão em 20 unidades; BELEM - PA lidera em promessas (21) e SALVADOR - BA em valor de entrada (R$ 116.655,48)."},
+    "wyden":{"meta":{"name":"WYDEN","color":"#FF0008","cls":"wyden"},
+    "totais":{"acionados":59,"promessas":55,"recusas":4,"valor":103085.86,"ticket":1874.29,"conv":93.2},
+    "unidades":[["UniFavip Wyden - Caruaru",38,35,3,72366.07],
+                ["UniFacid Wyden - Teresina",21,20,1,30719.79]],"motivos":[["AGENDAMENTO - PREVISÃO DE PAGAMENTO FIM DO MÊS",1],
+                ["INTENÇÃO DE PAGAMENTO - FICOU DE ANALISAR PROPOSTA",1],
+                ["RECUSA - SEM CONDIÇÕES",1],
+                ["RECUSA - DISCORDA DOS VALORES",1]],"pontos":["Principal motivo de recusa: AGENDAMENTO - PREVISÃO DE PAGAMENTO FIM DO MÊS (1 ocorrência).","Taxa de recusa no período: 6,8% (4 de 59 atendimentos).","Unidade UniFavip Wyden - Caruaru: 3 recusas (7,9% dos acionados) — principal motivo: AGENDAMENTO - PREVISÃO DE PAGAMENTO FIM DO MÊS.","Unidade UniFacid Wyden - Teresina: 1 recusas (4,8% dos acionados) — principal motivo: AGENDAMENTO - PREVISÃO DE PAGAMENTO FIM DO MÊS.","A unidade líder e o volume de promessas indicam boa tração nas negociações do período, mas é fundamental monitorar as recusas para ajustar as abordagens futuras."],"plano":[{"txt":"Confirmar previsões de pagamento de fim de mês e registrar follow-up dos retornos.","urg":false},
+    {"txt":"Priorizar acompanhamento das unidades com mais recusas: UniFavip Wyden - Caruaru (3), UniFacid Wyden - Teresina (1).","urg":true},
+    {"txt":"Criar lembretes de follow-up para converter a intenção em acordo formal antes do vencimento; padronizar cobrança de retorno.","urg":true},
+    {"txt":"Oferecer renegociação em parcelamentos mais longos e condições flexíveis.","urg":false}],"resumo":"A WYDEN somou R$ 103.085,86 em valor de entrada negociado e 93,2% de conversão na semana (2 unidades).","comp":"A \u003cstrong>WYDEN\u003c/strong> opera com 93,2% de conversão em 2 unidades; UniFacid Wyden - Teresina atingiu 95,2% de conversão; PIX foi a forma de pagamento mais comum."},
+    "idomed":{"meta":{"name":"IDOMED","color":"#0A3F3C","cls":"idomed"},
+    "totais":{"acionados":9,"promessas":8,"recusas":1,"valor":329114.91,"ticket":41139.36,"conv":88.9},
+    "unidades":[["Idomed (Cittá - RJ)",9,8,1,329114.91]],"motivos":[["RECUSA - SEM CONDIÇÕES",1]],"pontos":["Principal motivo de recusa: RECUSA - SEM CONDIÇÕES (1 ocorrência).","Taxa de recusa no período: 11,1% (1 de 9 atendimentos).","Unidade Idomed (Cittá - RJ): 1 recusas (11,1% dos acionados) — principal motivo: RECUSA - SEM CONDIÇÕES.","O volume de promessas de acordo atingiu o percentual da meta semanal com forte concentração na unidade líder, evidenciando a necessidade de replicar este modelo de abordagem para as demais unidades com menor adesão."],"plano":[{"txt":"Oferecer renegociação em parcelamentos mais longos e condições flexíveis; revisar o comprometimento de renda e propor entrada reduzida.","urg":true},
+    {"txt":"Priorizar acompanhamento das unidades com mais recusas: Idomed (Cittá - RJ) (1).","urg":true},
+    {"txt":"Criar lembretes de follow-up para converter a intenção em acordo formal antes do vencimento; padronizar cobrança de retorno.","urg":true},
+    {"txt":"Oferecer renegociação em parcelamentos mais longos e condições flexíveis.","urg":false}],"resumo":"A IDOMED somou R$ 329.114,91 em valor de entrada negociado e 88,9% de conversão na semana (1 unidade).","comp":"A \u003cstrong>IDOMED\u003c/strong> converteu 88,9% das 8 promessas, com R$ 329.114,91 em valor de entrada na semana; ticket médio de R$ 41.139,36 reflete negociações de alto valor."}};
+
+    // consolida as unidades de todas as marcas
+    ['estacio','wyden','idomed'].forEach(function(b){
+        DATA.todas.unidades = DATA.todas.unidades.concat(DATA[b].unidades);
+    });
+
+    var currentBrand = 'todas';
+    var total = 6;
+    var current = 1;
+    var initializedSlides = new Set();
+    var charts = {};
+
+    var brl = new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' });
+    var brlNoCents = v => 'R$ ' + Math.round(v).toLocaleString('pt-BR');
+    var fmtPct = v => v.toLocaleString('pt-BR', { minimumFractionDigits:1, maximumFractionDigits:1 }) + '%';
+    var fmtInt = v => v.toLocaleString('pt-BR');
+
+    var slideEls = document.querySelectorAll('.slide');
+    var dotEls = [];
+    var counterEl = document.getElementById('slideCounter');
+    var viewport = document.getElementById('viewport');
+    var progressTrack = document.getElementById('progressTrack');
+
+    function buildDots(){
+        progressTrack.innerHTML = '';
+        dotEls = [];
+        for (var i=1; i<=total; i++){
+            var b = document.createElement('button');
+            b.className = 'dot';
+            b.setAttribute('role','tab');
+            b.setAttribute('aria-label','Slide '+i);
+            b.dataset.dot = i;
+            b.onclick = function(){ goSlide(Number(this.dataset.dot)); };
+            progressTrack.appendChild(b);
+            dotEls.push(b);
+        }
+    }
+
+    function currentData(){ return DATA[currentBrand]; }
+    function meta(){ return currentData().meta; }
+    function brandCls(){ return meta().cls; }
+
+    function brandHead(id, txt){
+        var el = document.getElementById(id);
+        el.textContent = txt;
+        el.className = 'brand-head ' + brandCls();
+    }
+
+    function ticketFor(u){
+        return u[4] / u[2];
+    }
+    function convFor(u){
+        return u[2] / u[1] * 100;
+    }
+
+    // -------- slide 2 --------
+    function buildSlide2(){
+        var d = currentData();
+        var t = d.totais;
+        var unitsNote = d.unidades.length + (meta().cls==='all' ? ' unidades ativas na semana' : (d.unidades.length===1 ? ' unidade' : ' unidades'));
+        document.getElementById('s2Sub').textContent = d.meta.name + ' — ' + unitsNote;
+        var kpis = [
+            { l:'Acionados', v:fmtInt(t.acionados), s:'atendimentos na semana' },
+            { l:'Promessas', v:fmtInt(t.promessas), s:'acordos firmados' },
+            { l:'Recusas', v:fmtInt(t.recusas), s:'não convertidos', col:'var(--down)' },
+            { l:'Valor entrada', v:brl.format(t.valor), s:'negociado na semana', col:'var(--accent)' },
+            { l:'Conversão', v:fmtPct(t.conv), s:'promessas / acionados', col:'var(--up)' },
+            { l:'Ticket médio', v:brl.format(t.ticket), s:'por promessa' }
+        ];
+        document.getElementById('s2Kpis').innerHTML = kpis.map(function(k){
+            var bc = k.col ? ' style="border-left-color:' + k.col + '"' : '';
+            return '<div class="kpi-card"' + bc + '><div class="label">' + k.l + '</div><div class="value">' + k.v + '</div><div class="sub">' + k.s + '</div></div>';
+        }).join('');
+        document.getElementById('s2CalloutTxt').textContent = d.resumo;
+        document.getElementById('s2CalloutTxt').innerHTML = '<strong>Destaque:</strong> ' + d.resumo;
+    }
+
+    // -------- slide 3 (comparativo) --------
+    function buildSlide3(){
+        var d = currentData();
+        var keys = (meta().cls==='all') ? ['estacio','wyden','idomed'] : [currentBrand];
+        var rows = keys.map(function(b){
+            var t = DATA[b].totais;
+            return '<tr><td><span class="tier-dot" style="background:' + DATA[b].meta.color + '"></span><strong>' + DATA[b].meta.name + '</strong></td>' +
+                '<td>' + fmtInt(t.acionados) + '</td><td>' + fmtInt(t.promessas) + '</td><td>' + fmtInt(t.recusas) + '</td>' +
+                '<td>' + brl.format(t.valor) + '</td><td>' + brl.format(t.ticket) + '</td><td>' + fmtPct(t.conv) + '</td></tr>';
+        }).join('');
+        document.getElementById('brandTableBody').innerHTML = rows;
+        var tf = document.getElementById('brandTableFoot');
+        if (meta().cls === 'all'){
+            tf.innerHTML = '<tr><td>TOTAL GERAL</td><td>' + fmtInt(d.totais.acionados) + '</td><td>' + fmtInt(d.totais.promessas) + '</td><td>' + fmtInt(d.totais.recusas) + '</td><td>' + brl.format(d.totais.valor) + '</td><td>' + brl.format(d.totais.ticket) + '</td><td>' + fmtPct(d.totais.conv) + '</td></tr>';
+        } else {
+            tf.innerHTML = '';
+        }
+        document.getElementById('s3Callout').innerHTML = d.comp;
+    }
+
+    // -------- slide 4 (ranking) --------
+    function buildSlide4(){
+        var d = currentData();
+        var units;
+        if (meta().cls === 'all'){
+            var order = ['estacio','wyden','idomed'];
+            units = [];
+            order.forEach(function(b, idx){
+                units = units.concat(DATA[b].unidades);
+                if (idx < order.length-1) units.push({ spacer:true });
+            });
+        } else {
+            units = d.unidades.slice();
+        }
+        document.getElementById('s4Sub').textContent = meta().cls==='all' ? 'Unidades agrupadas por marca e ordenadas por conversão' : d.meta.name + ' — unidades ordenadas por conversão';
+
+        var labels = units.map(function(u){
+            if (u.spacer) return '';
+            return (meta().cls==='all' ? dMetaForUnit(u) + ' · ' : '') + u[0];
+        });
+        var dataArr = units.map(function(u){ return u.spacer ? 0 : convFor(u).toFixed(1); });
+        var bg = units.map(function(u){
+            if (u.spacer) return 'transparent';
+            return meta().cls==='all' ? colorForUnit(u) : meta().color;
         });
 
-
-        // Gráfico de Funil (Acionados vs Promessas)
-        const ctxFunil = document.getElementById('chartFunil').getContext('2d');
-        new Chart(ctxFunil, {
+        if (charts.ranking) charts.ranking.destroy();
+        charts.ranking = new Chart(document.getElementById('chartRanking'), {
             type: 'bar',
-            data: {
-                labels: ['Estácio', 'Idomed', 'Wyden'],
-                datasets: [
-                    {
-                        label: 'Acionados',
-                        data: [221, 9, 59],
-                        backgroundColor: '#94a3b8'
-                    },
-                    {
-                        label: 'Promessas',
-                        data: [178, 8, 55],
-                        backgroundColor: '#3b82f6'
-                    }
-                ]
-            },
-            options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            data: { labels: labels, datasets: [{ label:'Conversão (%)', data: dataArr, backgroundColor: bg, borderRadius:5 }] },
+            options: {
+                indexAxis:'y', responsive:true, maintainAspectRatio:false,
+                plugins:{ legend:{ display:false }, tooltip:{ filter:function(item){ return units[item.dataIndex] && !units[item.dataIndex].spacer; }, callbacks:{ label:function(c){ return c.parsed.x + '%'; } } } },
+                scales:{ x:{ min:0, max:100, ticks:{ callback:v => v + '%' }, grid:{ color:'#eef2f6' } }, y:{ grid:{ display:false } } }
+            }
         });
-    </script>
+
+        // legenda
+        var leg = document.getElementById('rankingLegend');
+        if (meta().cls === 'all'){
+            leg.innerHTML = '<span><i style="background:var(--brand-estacio);"></i> Estácio</span><span><i style="background:var(--brand-wyden);"></i> WYDEN</span><span><i style="background:var(--brand-idomed);"></i> IDOMED</span>';
+        } else {
+            leg.innerHTML = '<span><i style="background:' + meta().color + ';"></i> ' + meta().name + '</span>';
+        }
+    }
+    function tint(hex, f){
+        var n = String(hex).replace('#','');
+        var r = parseInt(n.substr(0,2),16), g = parseInt(n.substr(2,2),16), b = parseInt(n.substr(4,2),16);
+        r = Math.round(r + (255-r)*f); g = Math.round(g + (255-g)*f); b = Math.round(b + (255-b)*f);
+        return '#' + [r,g,b].map(function(x){ return ('0'+x.toString(16)).slice(-2); }).join('');
+    }
+
+    function colorForUnit(u){
+        for (var b in DATA){ if (b !== 'todas' && DATA[b].unidades.indexOf(u) >= 0) return DATA[b].meta.color; }
+        return '#0c2a4d';
+    }
+    function dMetaForUnit(u){
+        for (var b in DATA){ if (b !== 'todas' && DATA[b].unidades.indexOf(u) >= 0) return DATA[b].meta.name; }
+        return '';
+    }
+
+    // -------- slide 5 (financeiro) --------
+    function buildSlide5(){
+        var d = currentData();
+        var tbody = document.getElementById('unitTableBody');
+        var html = '';
+        var keys = (meta().cls==='all') ? ['estacio','wyden','idomed'] : [currentBrand];
+        keys.forEach(function(brandKey){
+            var rows = DATA[brandKey].unidades;
+            rows.forEach(function(u){
+                html += '<tr><td><span class="tier-dot" style="background:' + DATA[brandKey].meta.color + '"></span>' + DATA[brandKey].meta.name + '</td>' +
+                    '<td>' + u[0] + '</td><td>' + fmtInt(u[1]) + '</td><td>' + fmtInt(u[2]) + '</td><td>' + fmtInt(u[3]) + '</td>' +
+                    '<td>' + brl.format(u[4]) + '</td><td>' + brl.format(ticketFor(u)) + '</td><td>' + fmtPct(convFor(u)) + '</td></tr>';
+            });
+            if (meta().cls !== 'all'){
+                html += '<tr class="subtotal-row"><td colspan="2">Total ' + DATA[brandKey].meta.name + '</td><td>' + fmtInt(d.totais.acionados) + '</td><td>' + fmtInt(d.totais.promessas) + '</td><td>' + fmtInt(d.totais.recusas) + '</td><td>' + brl.format(d.totais.valor) + '</td><td>' + brl.format(d.totais.ticket) + '</td><td>' + fmtPct(d.totais.conv) + '</td></tr>';
+            }
+        });
+        if (meta().cls === 'all'){
+            html += '<tr class="subtotal-row"><td colspan="2">TOTAL GERAL</td><td>' + fmtInt(d.totais.acionados) + '</td><td>' + fmtInt(d.totais.promessas) + '</td><td>' + fmtInt(d.totais.recusas) + '</td><td>' + brl.format(d.totais.valor) + '</td><td>' + brl.format(d.totais.ticket) + '</td><td>' + fmtPct(d.totais.conv) + '</td></tr>';
+        }
+        tbody.innerHTML = html;
+        document.getElementById('unitTableFoot').innerHTML = '';
+
+        // scatter
+        if (charts.scatter) charts.scatter.destroy();
+        var pts = d.unidades.map(function(u){
+            return { x: ticketFor(u), y: convFor(u), unidade: u[0] };
+        });
+        charts.scatter = new Chart(document.getElementById('chartScatter'), {
+            type:'scatter',
+            data:{ datasets:[{
+                label:'Unidades',
+                data: pts.map(function(p){ return { x:p.x, y:p.y, unidade:p.unidade, marca: meta().name }; }),
+                backgroundColor: pts.map(function(p){ return colorForUnitFromData(p.unidade); }),
+                pointRadius: 6, pointHoverRadius: 8
+            }]},
+            options:{
+                responsive:true, maintainAspectRatio:false,
+                plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(c){ return c.raw.marca + ' · ' + c.raw.unidade + ': ' + brl.format(c.raw.x) + ' · ' + c.raw.y.toFixed(1) + '%'; } } } },
+                scales:{
+                    x:{ type:'logarithmic', title:{ display:true, text:'Ticket médio (R$, escala log)' }, ticks:{ callback:v => brlNoCents(v) } },
+                    y:{ title:{ display:true, text:'Conversão (%)' }, min:0, max:100, ticks:{ callback:v => v + '%' } }
+                }
+            }
+        });
+        var top = d.unidades.slice().sort(function(a,b){ return (b[4]/b[2]) - (a[4]/a[2]); })[0];
+        document.getElementById('s5Callout').innerHTML = '<strong>' + (top ? top[0] : d.meta.name) + '</strong> destaca-se pelo ticket médio na semana' + (top ? ' (R$ ' + Math.round(top[4]/top[2]).toLocaleString('pt-BR') + ')' : '') + '.';
+    }
+    function colorForUnitFromData(name){
+        for (var b in DATA){
+            var hit = DATA[b].unidades.some(function(u){ return u[0] === name; });
+            if (hit) return DATA[b].meta.color;
+        }
+        return '#0c2a4d';
+    }
+
+    // -------- slide 6 (recusas) --------
+    function buildSlide6(){
+        var d = currentData();
+        var maxRec = d.motivos.length ? d.motivos[0][1] : 1;
+        var ml = document.getElementById('s6Motivos');
+        if (!d.motivos.length){
+            ml.innerHTML = '<li style="border:none;background:var(--bg-panel)"><span>Nenhuma recusa registrada no período — 100% de conversão.</span></li>';
+        } else {
+            ml.innerHTML = d.motivos.map(function(m){
+                var pct = Math.round(m[1]/maxRec*100);
+                return '<li><span style="min-width:16px">💬</span><span>' + m[0] + '<span class="motivo-bar"><i style="width:' + pct + '%"></i></span></span><span class="m-count">' + fmtInt(m[1]) + '</span></li>';
+            }).join('');
+        }
+
+        var pts = document.getElementById('s6Pontos');
+        pts.innerHTML = d.pontos.map(function(p){ return '<div class="insight-item">' + p + '</div>'; }).join('');
+
+        var pl = document.getElementById('s6Plano');
+        pl.innerHTML = d.plano.map(function(p){
+            return '<div class="plan-item"><span>' + p.txt + '</span><span class="badge' + (p.urg?' urgent':'') + '">' + (p.urg?'Prioridade':'Ação') + '</span></div>';
+        }).join('');
+    }
+
+    function refreshLabeling(){
+        var d = currentData();
+        var m = meta();
+        var nameLabel = m.name;
+        brandHead('s2Head', meta().cls==='all' ? 'Consolidado · 3 marcas' : nameLabel);
+        brandHead('s3Head', meta().cls==='all' ? 'Comparativo entre marcas' : nameLabel + ' — indicadores');
+        brandHead('s4Head', 'Ranking de conversão por unidade');
+        brandHead('s5Head', 'Detalhamento financeiro por unidade');
+        brandHead('s6Head', 'Análise de recusas — ' + (meta().cls==='all' ? 'consolidado' : nameLabel));
+        document.getElementById('navTitle').textContent = 'Intervalor · ' + (meta().cls==='all' ? 'Consolidado Multimarcas' : nameLabel);
+        document.getElementById('coverSub').textContent = 'Recuperação de Crédito · ' + (meta().cls==='all' ? 'Todas as marcas' : nameLabel);
+        document.getElementById('coverLede').innerHTML = (meta().cls==='all'
+            ? 'Visão consolidada das 3 marcas atendidas pela Intervalor<br><strong>Promessas de acordo</strong>, comparativo entre marcas e plano de ação.'
+            : 'Produção e análise de <strong>' + nameLabel + '</strong><br>promessas de acordo, recusas e plano de ação.');
+        buildSlide2();
+        buildSlide3();
+        buildSlide4();
+        buildSlide5();
+        buildSlide6();
+    }
+
+    function updateSlide(){
+        slideEls.forEach(function(s){ s.classList.remove('active'); });
+        var el = document.querySelector('.slide[data-slide="' + current + '"]');
+        if (el) el.classList.add('active');
+        dotEls.forEach(function(d){
+            var isActive = Number(d.dataset.dot) === current;
+            d.classList.toggle('active', isActive);
+            d.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+        counterEl.textContent = current + ' / ' + total;
+        initChartsForSlide(current);
+    }
+
+    function goSlide(n){ if (n>=1 && n<=total){ current = n; updateSlide(); } }
+    function nextSlide(){ current = current < total ? current + 1 : 1; updateSlide(); }
+    function prevSlide(){ current = current > 1 ? current - 1 : total; updateSlide(); }
+    window.goSlide = goSlide; window.nextSlide = nextSlide; window.prevSlide = prevSlide;
+
+    function switchBrand(b){
+        currentBrand = b;
+        current = 1;
+        document.querySelectorAll('.brand-chip').forEach(function(c){
+            c.classList.toggle('active', c.dataset.brand === b);
+        });
+        // destroi gráficos antes de reconstruir
+        Object.keys(charts).forEach(function(k){ if (charts[k]) charts[k].destroy(); });
+        charts = {};
+        initializedSlides.clear();
+        refreshLabeling();
+        updateSlide();
+    }
+
+    document.querySelectorAll('.brand-chip').forEach(function(c){
+        c.addEventListener('click', function(){ switchBrand(c.dataset.brand); });
+    });
+
+    viewport.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight') nextSlide();
+        else if (e.key === 'ArrowLeft') prevSlide();
+        else if (e.key === 'Home') goSlide(1);
+        else if (e.key === 'End') goSlide(total);
+    });
+    document.addEventListener('keydown', function(e){
+        if (document.activeElement === document.body){
+            if (e.key === 'ArrowRight') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        }
+    });
+
+    var touchStartX = null;
+    viewport.addEventListener('touchstart', function(e){ touchStartX = e.changedTouches[0].clientX; }, { passive:true });
+    viewport.addEventListener('touchend', function(e){
+        if (touchStartX === null) return;
+        var dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 45){ dx < 0 ? nextSlide() : prevSlide(); }
+        touchStartX = null;
+    }, { passive:true });
+
+    // ---------- gráficos por slide ----------
+    function initChartsForSlide(n){
+        if (initializedSlides.has(n)) return;
+        if (typeof Chart === 'undefined'){ setTimeout(function(){ initChartsForSlide(n); }, 60); return; }
+        initializedSlides.add(n);
+
+        var d = currentData();
+        var keys = (meta().cls==='all') ? ['estacio','wyden','idomed'] : [currentBrand];
+
+        if (n === 2){
+            if (charts.valor) charts.valor.destroy();
+            charts.valor = new Chart(document.getElementById('chartValor'), {
+                type:'bar',
+                data:{ labels: keys.map(function(b){ return DATA[b].meta.name; }), datasets:[{ label:'Valor de entrada', data: keys.map(function(b){ return DATA[b].totais.valor; }), backgroundColor: keys.map(function(b){ return DATA[b].meta.color; }), borderRadius:6 }] },
+                options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(c){ return brl.format(c.parsed.y); } } } }, scales:{ y:{ ticks:{ callback:v => brlNoCents(v) }, grid:{ color:'#eef2f6' } }, x:{ grid:{ display:false } } } }
+            });
+            if (charts.conv) charts.conv.destroy();
+            charts.conv = new Chart(document.getElementById('chartConv'), {
+                type:'bar',
+                data:{ labels: keys.map(function(b){ return DATA[b].meta.name; }), datasets:[{ label:'Conversão (%)', data: keys.map(function(b){ return DATA[b].totais.conv; }), backgroundColor: keys.map(function(b){ return DATA[b].meta.color; }), borderRadius:6 }] },
+                options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(c){ return c.parsed.y + '%'; } } } }, scales:{ y:{ min:0, max:100, ticks:{ callback:v => v + '%' }, grid:{ color:'#eef2f6' } }, x:{ grid:{ display:false } } } }
+            });
+        }
+        if (n === 3){
+            if (charts.acionProm) charts.acionProm.destroy();
+            charts.acionProm = new Chart(document.getElementById('chartAcionProm'), {
+                type:'bar',
+                data:{ labels: keys.map(function(b){ return DATA[b].meta.name; }), datasets:[
+                    { label:'Acionados', data: keys.map(function(b){ return DATA[b].totais.acionados; }), backgroundColor: keys.map(function(b){ return DATA[b].meta.color; }), borderRadius:6 },
+                    { label:'Promessas', data: keys.map(function(b){ return DATA[b].totais.promessas; }), backgroundColor: keys.map(function(b){ return tint(DATA[b].meta.color, 0.55); }), borderRadius:6 }
+                ]},
+                options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'top', labels:{ boxWidth:12, usePointStyle:true } } }, scales:{ y:{ grid:{ color:'#eef2f6' } }, x:{ grid:{ display:false } } } }
+            });
+        }
+        if (n === 4){ buildSlide4(); }
+        if (n === 5){ buildSlide5(); }
+    }
+
+    buildDots();
+    refreshLabeling();
+    updateSlide();
+})();
+</script>
 </body>
 </html>
